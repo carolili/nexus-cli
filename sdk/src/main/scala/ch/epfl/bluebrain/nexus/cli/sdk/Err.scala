@@ -2,6 +2,7 @@ package ch.epfl.bluebrain.nexus.cli.sdk
 
 import cats.effect._
 import ch.epfl.bluebrain.nexus.cli.sdk.Terminal.lineSep
+import ch.epfl.bluebrain.nexus.cli.sdk.api.model.ApiResponse
 import fansi.{Color, Str}
 import fs2.io.file.Path
 import io.circe.{DecodingFailure, Json, ParsingFailure}
@@ -157,6 +158,18 @@ object Err {
     override val solution: Option[String] = None
 
     override def render(term: Terminal): IO[String] = renderHeader(term)
+  }
+
+  case class UnsuccessfulResponseErr(resp: ApiResponse.Unsuccessful) extends Err {
+    override val message: String = "The request was unsuccessful."
+
+    override val description: String =
+      s"""A request is considered unsuccessful when either the status code is not in the 2xx range or the
+         |response body could not be decoded as the expected type.""".stripMargin
+
+    override val solution: Option[String] = None
+
+    override def render(term: Terminal): IO[String] = renderWithResponse(term, resp.status, resp.raw)
   }
 
   case class PathIsNotReadableErr(path: Path) extends Err {
